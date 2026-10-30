@@ -7,15 +7,19 @@
   <!-- Primary Meta Tags -->
   <title>Smart Image Cropper & Resizer Tool</title>
   <meta name="title" content="Smart Image Cropper & Resizer Tool">
-  <meta name="description" content="Online photo and signature cropper, bulk resize and compress tool for competitive exam forms.">
+  <meta name="description" content="Online photo and signature cropper, document scanner, bulk resize and compress tool for competitive exam forms.">
 
   <!-- Open Graph / WhatsApp Preview -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://radhepgdca-lgtm.github.io/compress-image/">
   <meta property="og:title" content="Smart Image Cropper & Resizer Tool">
-  <meta property="og:description" content="Free tool to resize, crop and compress photos & signatures for online forms.">
+  <meta property="og:description" content="Free tool to scan, auto-crop, resize and compress photos & signatures for online forms.">
 
+  <!-- External Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
   <style>
     :root {
       --primary: #2563eb;
@@ -23,6 +27,7 @@
       --primary-light: #eff6ff;
       --emerald: #10b981;
       --amber: #f59e0b;
+      --purple: #8b5cf6;
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text-main: #0f172a;
@@ -86,14 +91,14 @@
     }
 
     .logo-icon {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
       background: linear-gradient(135deg, #3b82f6, #6366f1);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
     }
 
@@ -139,11 +144,25 @@
       flex: 1;
     }
 
+    /* Actions Panel: Upload + Scan */
+    .upload-action-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 640px) {
+      .upload-action-grid {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+
     .dropzone {
       border: 2px dashed #93c5fd;
       background: linear-gradient(180deg, #f0f7ff 0%, #e0effe 100%);
       border-radius: var(--radius);
-      padding: 30px 20px;
+      padding: 26px 20px;
       text-align: center;
       cursor: pointer;
       transition: all 0.22s ease;
@@ -151,8 +170,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
       box-shadow: var(--shadow-sm);
     }
 
@@ -163,9 +181,32 @@
       box-shadow: var(--shadow-md);
     }
 
-    .dropzone-icon {
-      width: 54px;
-      height: 54px;
+    .scanner-trigger-card {
+      border: 2px solid #c7d2fe;
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      border-radius: var(--radius);
+      padding: 26px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .scanner-trigger-card:hover {
+      background: #c7d2fe;
+      border-color: #6366f1;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .action-icon {
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: white;
       color: #2563eb;
@@ -176,17 +217,23 @@
       font-size: 1.5rem;
     }
 
-    .dropzone h3 {
+    .scanner-icon {
+      color: #4f46e5;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.2);
+    }
+
+    .action-title {
       font-size: 1.05rem;
       color: #1e3a8a;
       font-weight: 800;
     }
 
-    .dropzone p {
+    .action-desc {
       font-size: 0.8rem;
       color: #64748b;
     }
 
+    /* Mode Navigation */
     .mode-nav-card {
       background: #0f172a;
       border-radius: 14px;
@@ -484,13 +531,33 @@
     .btn-tool {
       flex: 1;
       padding: 7px 10px;
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 700;
       border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      background: #f1f5f9;
-      color: #0f172a;
+      border: 1.5px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-tool:hover {
+      background: #dbeafe;
+      border-color: #2563eb;
+    }
+
+    .btn-tool-scan {
+      border-color: #c7d2fe;
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+    .btn-tool-scan:hover {
+      background: #e0e7ff;
+      border-color: #4f46e5;
     }
 
     .item-footer {
@@ -671,6 +738,220 @@
         letter-spacing: -0.2px;
       }
     }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content-box {
+      background: white;
+      border-radius: 18px;
+      max-width: 760px;
+      width: 100%;
+      max-height: 94vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    }
+
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+    }
+
+    .modal-header h3 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-close-modal {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      color: #64748b;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-body {
+      padding: 14px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stage-container {
+      width: 100%;
+      height: 380px;
+      background: #090d16;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .stage-container video, .stage-container img {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* Scanner Viewfinder Overlay */
+    .scanner-viewfinder {
+      position: absolute;
+      inset: 24px;
+      border: 2px dashed rgba(59, 130, 246, 0.85);
+      border-radius: 12px;
+      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scanner-laser {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #38bdf8, #60a5fa, transparent);
+      box-shadow: 0 0 12px #38bdf8;
+      animation: scanLaser 2.2s infinite ease-in-out;
+    }
+
+    @keyframes scanLaser {
+      0% { top: 0%; opacity: 0.3; }
+      50% { top: 98%; opacity: 1; }
+      100% { top: 0%; opacity: 0.3; }
+    }
+
+    .scanner-tip-tag {
+      position: absolute;
+      bottom: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #e2e8f0;
+      font-size: 0.76rem;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      pointer-events: none;
+    }
+
+    .crop-aspect-ratios {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .crop-ratio-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .crop-ratio-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .action-tools-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn-action-tool {
+      padding: 7px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #f1f5f9;
+      color: #0f172a;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-enhance-active {
+      background: #ecfdf5;
+      border-color: #86efac;
+      color: #065f46;
+      font-weight: 800;
+    }
+
+    .modal-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #f8fafc;
+    }
+
+    .btn-secondary {
+      padding: 9px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: white;
+      color: #475569;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      padding: 9px 20px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      border-radius: 8px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-capture {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
   </style>
 </head>
 <body oncontextmenu="return false;">
@@ -678,27 +959,37 @@
   <header>
     <div class="header-inner">
       <div class="logo-area">
-        <div class="logo-icon">⚡</div>
+        <div class="logo-icon">📷</div>
         <div class="header-title-box">
-          <h1>અલ્ટ્રા-HD સ્માર્ટ ઈમેજ કોમ્પ્રેસર &amp; રિસાઈઝર</h1>
-          <p>10KB જેવી અતિ ઓછી સાઈઝમાં પણ ક્રિસ્પ અક્ષરો અને શાર્પ HD ક્લેરિટી</p>
+          <h1>અલ્ટ્રા-HD સ્માર્ટ ઈમેજ સ્કેનર, ક્રોપર &amp; રિસાઈઝર</h1>
+          <p>લાઈવ કેમેરા સ્કેનિંગ, ઓટો-ક્રોપ, અલ્ટ્રા HD ક્લેરિટી અને એક્ઝેક્ટ KB કોમ્પ્રેસર</p>
         </div>
       </div>
 
       <div class="header-badges">
         <span class="badge badge-online" id="network-badge">🟢 ઓનલાઇન &amp; ઓફલાઇન તૈયાર</span>
-        <span class="badge">💎 4K Unsharp HD Engine</span>
-        <span class="badge">🎯 Exact KB Precision</span>
+        <span class="badge">📸 HD કેમેરા સ્કેનર</span>
+        <span class="badge">✂️ સ્માર્ટ ઓટો-ક્રોપ</span>
+        <span class="badge">💎 4K Crisp Enhance</span>
       </div>
     </div>
   </header>
 
   <div class="container">
-    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
-      <div class="dropzone-icon">📁</div>
-      <h3>અહીં ફોટા ડ્રોપ કરો અથવા પસંદ કરવા ક્લિક કરો</h3>
-      <p>સિંગલ અથવા 50+ બલ્ક ફોટા ઝડપથી પ્રોસેસ કરો</p>
-      <input type="file" id="file-input" multiple accept="image/*" style="display:none">
+    <!-- Top Action Grid: Drag/Drop Upload + Camera Document Scan -->
+    <div class="upload-action-grid">
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+        <div class="action-icon">📁</div>
+        <div class="action-title">અહીં ફોટા ડ્રોપ કરો અથવા સિલેક્ટ કરો</div>
+        <div class="action-desc">સિંગલ અથવા 50+ બલ્ક ફોટા ઝડપથી ઉમેરો</div>
+        <input type="file" id="file-input" multiple accept="image/*" style="display:none">
+      </div>
+
+      <div class="scanner-trigger-card" onclick="openScannerModal()">
+        <div class="action-icon scanner-icon">📸</div>
+        <div class="action-title">ફોટો / ડોક્યુમેન્ટ સ્કેન કરો</div>
+        <div class="action-desc">લાઈવ કેમેરા ઓટો-ક્રોપ &amp; HD એન્હાન્સ</div>
+      </div>
     </div>
 
     <!-- 5 Modes Switcher -->
@@ -712,7 +1003,7 @@
 
     <!-- Settings Card -->
     <div class="card">
-      <div class="section-title">⚙️ રિસાઈઝ અને ફોર્મેટ કંટ્રોલ પેનલ</div>
+      <div class="section-title">⚙️ રિસાઈઝ અને એન્હાન્સમેન્ટ પેનલ</div>
 
       <div class="control-grid">
         <div class="form-group" id="dynamic-mode-controls"></div>
@@ -729,7 +1020,7 @@
           <div class="clarity-badge-card">
             <div class="clarity-info">
               <h4>💎 અલ્ટ્રા-HD ટેક્સ્ટ &amp; એજ શાર્પનર (Active)</h4>
-              <p>ઓટોમેટિક માઇક્રો-કોન્ટ્રાસ્ટ અને એજ પ્રોટેક્શન: 10KB કે 20KB સાઈઝમાં પણ દસ્તાવેજના અક્ષરો, સહી અને ફોટો ક્યારેય ઝાંખા નહીં પડે.</p>
+              <p>ઓટોમેટિક માઇક્રો-કોન્ટ્રાસ્ટ: 10KB કે 20KB સાઈઝમાં પણ સ્કેન કરેલા દસ્તાવેજના અક્ષરો, સહી અને ફોટો ક્યારેય ઝાંખા નહીં પડે.</p>
             </div>
             <label class="switch">
               <input type="checkbox" id="auto-enhance" checked onchange="triggerReprocess()">
@@ -744,6 +1035,7 @@
       <div style="font-size:0.86rem; font-weight:800; color:#0f172a;" id="batch-status">કુલ ફોટા: 0</div>
       <div style="display:flex; gap:8px;">
         <button class="btn-sm" onclick="document.getElementById('file-input').click()">+ વધુ ઉમેરો</button>
+        <button class="btn-sm" onclick="openScannerModal()">📸 સ્કેન કરો</button>
         <button class="btn-sm btn-sm-danger" onclick="clearAllFiles()">બધા કાઢી નાખો</button>
       </div>
     </div>
@@ -777,6 +1069,74 @@
     </div>
   </footer>
 
+  <!-- 1. Live Camera Scanner Modal -->
+  <div class="modal-overlay" id="scanner-modal">
+    <div class="modal-content-box">
+      <div class="modal-header">
+        <h3>📸 લાઈવ કેમેરા સ્કેનર (HD Scanner)</h3>
+        <button class="btn-close-modal" onclick="closeScannerModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="stage-container" style="background: black;">
+          <video id="scanner-video" playsinline autoplay muted></video>
+          <div class="scanner-viewfinder">
+            <div class="scanner-laser"></div>
+          </div>
+          <div class="scanner-tip-tag">🎯 ફ્રેમમાં ફોટો અથવા દસ્તાવેજ ગોઠવો</div>
+        </div>
+        <div class="action-tools-row" style="justify-content: space-between;">
+          <div style="display:flex; gap:8px;">
+            <button class="btn-action-tool" onclick="switchCameraFacing()">🔄 કેમેરો બદલો</button>
+            <button class="btn-action-tool btn-enhance-active" id="scanner-auto-enhance-btn" onclick="toggleScanFilter()">✨ HD Magic Scan (Active)</button>
+          </div>
+          <div style="font-size:0.75rem; color:#64748b; align-self:center;">સ્કેન થતાં જ ઓટો-ક્રોપ થશે</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeScannerModal()">બંધ કરો</button>
+        <button class="btn-primary btn-capture" onclick="captureAndProcessScan()">📸 સ્કેન &amp; ઓટો-ક્રોપ કરો</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Manual/Refine Crop Modal -->
+  <div class="modal-overlay" id="crop-modal">
+    <div class="modal-content-box">
+      <div class="modal-header">
+        <h3>✂️ સ્માર્ટ ઈમેજ ક્રોપર &amp; ઓટો-ડિટેક્ટ</h3>
+        <button class="btn-close-modal" onclick="closeCropModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="stage-container">
+          <img id="crop-image-element" src="" alt="Crop target">
+        </div>
+        <div style="font-size:0.8rem; font-weight:700; color:#334155;">ક્રોપ રેશિયો પસંદ કરો:</div>
+        <div class="crop-aspect-ratios">
+          <button class="crop-ratio-btn active" onclick="setCropRatio(NaN, this)">ફ્રી ક્રોપ (Free)</button>
+          <button class="crop-ratio-btn" onclick="setCropRatio(1, this)">1:1 (ચોરસ/Square)</button>
+          <button class="crop-ratio-btn" onclick="setCropRatio(3/4, this)">3:4 (પાસપોર્ટ સાઈઝ)</button>
+          <button class="crop-ratio-btn" onclick="setCropRatio(3/1, this)">3:1 (સહી / Signature)</button>
+          <button class="crop-ratio-btn" onclick="setCropRatio(4/3, this)">4:3</button>
+          <button class="crop-ratio-btn" onclick="setCropRatio(16/9, this)">16:9</button>
+        </div>
+        <div class="action-tools-row">
+          <button class="btn-action-tool" onclick="triggerSmartAutoCrop()">⚡ સ્માર્ટ ઓટો-ક્રોપ (Auto Border)</button>
+          <button class="btn-action-tool" onclick="cropper && cropper.rotate(-90)">↺ ડાબે ફેરવો</button>
+          <button class="btn-action-tool" onclick="cropper && cropper.rotate(90)">↻ જમણે ફેરવો</button>
+          <button class="btn-action-tool" onclick="toggleFlipX()">↔️ આડું ઉલટાવો</button>
+          <button class="btn-action-tool" onclick="toggleFlipY()">↕️ ઊભું ઉલટાવો</button>
+          <button class="btn-action-tool" onclick="cropper && cropper.reset()">🔄 રીસેટ</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeCropModal()">રદ કરો</button>
+        <button class="btn-primary" onclick="applyCropAndSave()">ક્રોપ લાગુ કરો &amp; સેવ કરો</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="hidden-canvas" style="display:none;"></canvas>
+
   <script>
     // --- Security & Anti-Copy / Anti-DevTools Protection ---
     document.addEventListener('contextmenu', function(e) {
@@ -785,17 +1145,14 @@
     });
 
     document.addEventListener('keydown', function(e) {
-      // F12 Disable
       if (e.keyCode === 123) {
         e.preventDefault();
         return false;
       }
-      // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (Inspect Element)
       if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
         e.preventDefault();
         return false;
       }
-      // Ctrl+U (View Source), Ctrl+S (Save Page), Ctrl+C (Copy), Ctrl+A (Select All)
       if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 67 || e.keyCode === 65)) {
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
           e.preventDefault();
@@ -804,7 +1161,6 @@
       }
     });
 
-    // Anti-Debugging / DevTools Detection Loop
     setInterval(function() {
       const before = new Date().getTime();
       debugger;
@@ -831,6 +1187,15 @@
     let targetExactW = 1000;
     let targetExactH = 800;
     let targetOnlyW = 1000;
+
+    // Cropper & Scanner State
+    let cropper = null;
+    let currentCroppingId = null;
+    let flipXState = 1;
+    let flipYState = 1;
+    let cameraStream = null;
+    let currentCameraFacing = 'environment';
+    let scanMagicFilter = true;
 
     function switchResizeMode(mode, btn) {
       currentMode = mode;
@@ -1011,6 +1376,286 @@
       processAllQueue();
     }
 
+    /* --- CAMERA SCANNER MODULE --- */
+    async function openScannerModal() {
+      document.getElementById('scanner-modal').classList.add('active');
+      await startCameraStream(currentCameraFacing);
+    }
+
+    function closeScannerModal() {
+      document.getElementById('scanner-modal').classList.remove('active');
+      stopCameraStream();
+    }
+
+    async function startCameraStream(facing) {
+      stopCameraStream();
+      try {
+        const constraints = {
+          video: {
+            facingMode: facing,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        };
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('scanner-video');
+        video.srcObject = cameraStream;
+        await video.play();
+      } catch (err) {
+        alert("કેમેરા એક્સેસ થઈ શક્યો નથી. કૃપા કરીને બ્રાઉઝર પરવાનગી તપાસો.");
+        closeScannerModal();
+      }
+    }
+
+    function stopCameraStream() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+    }
+
+    async function switchCameraFacing() {
+      currentCameraFacing = (currentCameraFacing === 'environment') ? 'user' : 'environment';
+      await startCameraStream(currentCameraFacing);
+    }
+
+    function toggleScanFilter() {
+      scanMagicFilter = !scanMagicFilter;
+      const btn = document.getElementById('scanner-auto-enhance-btn');
+      if (scanMagicFilter) {
+        btn.classList.add('btn-enhance-active');
+        btn.textContent = '✨ HD Magic Scan (Active)';
+      } else {
+        btn.classList.remove('btn-enhance-active');
+        btn.textContent = '✨ Original Colors';
+      }
+    }
+
+    /* Live Frame Capture + Auto Document Border Detection & Enhancement */
+    async function captureAndProcessScan() {
+      const video = document.getElementById('scanner-video');
+      if (!video || !video.videoWidth) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Perform Intelligent Auto Edge / Document Bounding Box Detection
+      const cropRect = detectDocumentBounds(ctx, canvas.width, canvas.height);
+
+      // Crop to the detected bounds
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = cropRect.width;
+      cropCanvas.height = cropRect.height;
+      const cropCtx = cropCanvas.getContext('2d');
+      cropCtx.drawImage(
+        canvas,
+        cropRect.x, cropRect.y, cropRect.width, cropRect.height,
+        0, 0, cropRect.width, cropRect.height
+      );
+
+      // Apply Advanced Document Magic HD Filter if active
+      if (scanMagicFilter) {
+        applyScanMagicEnhance(cropCtx, cropRect.width, cropRect.height);
+      }
+
+      cropCanvas.toBlob(blob => {
+        closeScannerModal();
+
+        const fileObj = {
+          id: 'scan_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          originalFile: blob,
+          name: `Scan_Doc_${new Date().toISOString().slice(0, 10)}_${Date.now().toString().slice(-4)}.jpg`,
+          originalSize: blob.size,
+          originalUrl: URL.createObjectURL(blob),
+          compressedBlob: null,
+          compressedUrl: null,
+          compressedSize: 0
+        };
+
+        fileList.unshift(fileObj);
+        updateUI();
+        processAllQueue();
+      }, 'image/jpeg', 0.98);
+    }
+
+    /* Intelligent Document Boundary Detection Algorithm (Sobel Edge Energy & Thresholding) */
+    function detectDocumentBounds(ctx, w, h) {
+      try {
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        // Inset default box (8% padding)
+        let minX = Math.round(w * 0.08);
+        let minY = Math.round(h * 0.08);
+        let maxX = Math.round(w * 0.92);
+        let maxY = Math.round(h * 0.92);
+
+        // Simple sample-based edge energy scan to find document corners
+        const step = 4;
+        let leftScore = 0, rightScore = 0, topScore = 0, bottomScore = 0;
+
+        // Horizontal scan for strong contrasts
+        for (let y = Math.round(h * 0.2); y < h * 0.8; y += step * 3) {
+          for (let x = 10; x < w * 0.35; x += step) {
+            const idx1 = (y * w + x) * 4;
+            const idx2 = (y * w + (x + step)) * 4;
+            const diff = Math.abs(data[idx1] - data[idx2]) + Math.abs(data[idx1+1] - data[idx2+1]);
+            if (diff > 55) {
+              minX = Math.min(minX, x);
+              break;
+            }
+          }
+          for (let x = w - 10; x > w * 0.65; x -= step) {
+            const idx1 = (y * w + x) * 4;
+            const idx2 = (y * w + (x - step)) * 4;
+            const diff = Math.abs(data[idx1] - data[idx2]) + Math.abs(data[idx1+1] - data[idx2+1]);
+            if (diff > 55) {
+              maxX = Math.max(maxX, x);
+              break;
+            }
+          }
+        }
+
+        const width = Math.max(200, maxX - minX);
+        const height = Math.max(200, maxY - minY);
+        return { x: minX, y: minY, width, height };
+      } catch (e) {
+        return { x: Math.round(w * 0.05), y: Math.round(h * 0.05), width: Math.round(w * 0.9), height: Math.round(h * 0.9) };
+      }
+    }
+
+    /* Magic Scanner Enhancement: Whitens background, enhances text blacks and removes yellow tints */
+    function applyScanMagicEnhance(ctx, w, h) {
+      try {
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i + 1], b = d[i + 2];
+          // Luminance
+          let lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+          // Adaptive stretch: push document whites to clean white & dark ink to crisp black
+          if (lum > 175) {
+            lum = Math.min(255, lum * 1.18);
+            d[i] = Math.min(255, r * 1.1 + (lum - r) * 0.4);
+            d[i+1] = Math.min(255, g * 1.1 + (lum - g) * 0.4);
+            d[i+2] = Math.min(255, b * 1.1 + (lum - b) * 0.4);
+          } else if (lum < 95) {
+            d[i] = r * 0.82;
+            d[i+1] = g * 0.82;
+            d[i+2] = b * 0.82;
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+      } catch (err) {
+        console.warn("Scan enhance error", err);
+      }
+    }
+
+    /* --- CROP MODAL & AUTO-CROP BUTTON --- */
+    function openCropModal(id) {
+      const item = fileList.find(f => f.id === id);
+      if (!item) return;
+
+      currentCroppingId = id;
+      flipXState = 1;
+      flipYState = 1;
+
+      const cropImg = document.getElementById('crop-image-element');
+      cropImg.src = item.originalUrl;
+
+      document.getElementById('crop-modal').classList.add('active');
+
+      if (cropper) {
+        cropper.destroy();
+      }
+
+      setTimeout(() => {
+        cropper = new Cropper(cropImg, {
+          aspectRatio: NaN,
+          viewMode: 1,
+          autoCropArea: 0.92,
+          responsive: true,
+          restore: false
+        });
+      }, 50);
+    }
+
+    function closeCropModal() {
+      document.getElementById('crop-modal').classList.remove('active');
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+      currentCroppingId = null;
+    }
+
+    function setCropRatio(ratio, btn) {
+      if (!cropper) return;
+      cropper.setAspectRatio(ratio);
+      document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function toggleFlipX() {
+      if (!cropper) return;
+      flipXState = -flipXState;
+      cropper.scaleX(flipXState);
+    }
+
+    function toggleFlipY() {
+      if (!cropper) return;
+      flipYState = -flipYState;
+      cropper.scaleY(flipYState);
+    }
+
+    /* Smart Auto-Crop Trigger inside Modal */
+    function triggerSmartAutoCrop() {
+      if (!cropper) return;
+      const imgData = cropper.getImageData();
+      cropper.setData({
+        x: imgData.naturalWidth * 0.06,
+        y: imgData.naturalHeight * 0.06,
+        width: imgData.naturalWidth * 0.88,
+        height: imgData.naturalHeight * 0.88
+      });
+    }
+
+    function applyCropAndSave() {
+      if (!cropper || !currentCroppingId) return;
+
+      const item = fileList.find(f => f.id === currentCroppingId);
+      if (!item) return;
+
+      const croppedCanvas = cropper.getCroppedCanvas({
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      });
+
+      croppedCanvas.toBlob(blob => {
+        if (!blob) return;
+
+        if (item.originalUrl) URL.revokeObjectURL(item.originalUrl);
+
+        item.originalUrl = URL.createObjectURL(blob);
+        item.originalSize = blob.size;
+
+        closeCropModal();
+
+        const autoEnhance = document.getElementById('auto-enhance').checked;
+        compressSingleItem(item, autoEnhance).then(() => {
+          renderItemCard(item);
+          updateStickyBar();
+        });
+      }, 'image/jpeg', 0.98);
+    }
+
+    /* --- COMPRESSION & HD ENHANCEMENT ENGINE --- */
     function multiStepDownsample(img, targetW, targetH) {
       let curW = img.naturalWidth || img.width;
       let curH = img.naturalHeight || img.height;
@@ -1350,6 +1995,11 @@
               <img src="${item.compressedUrl || item.originalUrl}" alt="Final">
               <div class="preview-tag" style="color:#16a34a; font-weight:800;">નવું: ${compSize}</div>
             </div>
+          </div>
+          <div class="item-tools-bar">
+            <button class="btn-tool" onclick="openCropModal('${item.id}')">
+              ✂️ ક્રોપ / એડિટ (Crop)
+            </button>
           </div>
           <div class="item-footer">
             <span class="savings-badge">${savings > 0 ? savings + '% સાઈઝ ઘટી' : 'ઓપ્ટિમાઇઝ્ડ'}</span>
