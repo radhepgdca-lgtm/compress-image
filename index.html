@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Primary Meta Tags -->
+  <title>Smart Image Cropper & Resizer Tool</title>
+  <meta name="title" content="Smart Image Cropper & Resizer Tool">
+  <meta name="description" content="Online photo and signature cropper, bulk resize and compress tool for competitive exam forms.">
+
+  <!-- Open Graph / WhatsApp Preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://radhepgdca-lgtm.github.io/compress-image/">
+  <meta property="og:title" content="Smart Image Cropper & Resizer Tool">
+  <meta property="og:description" content="Free tool to resize, crop and compress photos & signatures for online forms.">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.15);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Gujarati", Helvetica, Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    input, textarea {
+      user-select: auto;
+      -webkit-user-select: auto;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 100px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #091e42 0%, #1e3a8a 55%, #1d4ed8 100%);
+      color: white;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    }
+
+    .header-title-box h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .header-title-box p {
+      font-size: 0.78rem;
+      color: #bfdbfe;
+      margin-top: 2px;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(6px);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    .badge-online { color: #86efac; }
+
+    .container {
+      max-width: 1140px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 16px;
+      flex: 1;
+    }
+
+    .dropzone {
+      border: 2px dashed #93c5fd;
+      background: linear-gradient(180deg, #f0f7ff 0%, #e0effe 100%);
+      border-radius: var(--radius);
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      background: #dbeafe;
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .dropzone-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: white;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.16);
+      font-size: 1.5rem;
+    }
+
+    .dropzone h3 {
+      font-size: 1.05rem;
+      color: #1e3a8a;
+      font-weight: 800;
+    }
+
+    .dropzone p {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .mode-nav-card {
+      background: #0f172a;
+      border-radius: 14px;
+      padding: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .mode-btn {
+      flex: 1;
+      min-width: 130px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #94a3b8;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .mode-btn:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .mode-btn.active {
+      color: white;
+      background: #2563eb;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f172a;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .control-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .chips-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    .chip-btn {
+      padding: 7px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+      box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+    }
+
+    .input-box {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #ffffff;
+      color: var(--text-main);
+      outline: none;
+      font-weight: 600;
+    }
+
+    .input-box:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .format-btn {
+      padding: 8px 4px;
+      text-align: center;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      font-weight: 800;
+      font-size: 0.8rem;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .format-btn.active {
+      background: #eff6ff;
+      border-color: #2563eb;
+      color: #2563eb;
+    }
+
+    .clarity-badge-card {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 1.5px solid #86efac;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .clarity-info h4 {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: #14532d;
+    }
+
+    .clarity-info p {
+      font-size: 0.73rem;
+      color: #166534;
+      line-height: 1.35;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background-color: #cbd5e1; transition: .3s; border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--emerald); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .batch-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .btn-sm-danger {
+      color: #ef4444;
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 768px) {
+      .items-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .item-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .item-name {
+      font-size: 0.84rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80%;
+      color: #0f172a;
+    }
+
+    .previews-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .preview-col { text-align: center; }
+    .preview-col img {
+      width: 100%;
+      height: 135px;
+      object-fit: contain;
+      background: #e2e8f0;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .preview-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #475569;
+      margin-top: 5px;
+    }
+
+    .item-tools-bar {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      flex: 1;
+      padding: 7px 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #f1f5f9;
+      color: #0f172a;
+      cursor: pointer;
+    }
+
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 6px;
+    }
+
+    .savings-badge {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: #15803d;
+      background: #dcfce7;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .btn-download-single {
+      padding: 7px 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: #2563eb;
+      color: white;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .mobile-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 12px 20px;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      z-index: 40;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-main {
+      padding: 11px 22px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+      white-space: nowrap;
+    }
+
+    .btn-main:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+    footer {
+      margin-top: 40px;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .smart-creator-card {
+      position: relative;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border: 1.5px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 12px 20px 12px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 14px 30px -6px rgba(30, 58, 138, 0.15);
+      max-width: 95%;
+    }
+
+    .smart-creator-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3.5px;
+      background: linear-gradient(90deg, #f59e0b, #2563eb, #10b981);
+    }
+
+    .photo-glow-ring {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      padding: 2px;
+      background: linear-gradient(135deg, #f59e0b, #3b82f6);
+      flex-shrink: 0;
+    }
+
+    .photo-glow-ring img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: #1e3a8a;
+    }
+
+    .creator-content {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .creator-tag {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #0284c7;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      background: #e0f2fe;
+      padding: 2px 8px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    .creator-title-name {
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    .creator-school-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .creator-details {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #475569;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 600px) {
+      .smart-creator-card {
+        padding: 10px 14px;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .photo-glow-ring {
+        width: 48px;
+        height: 48px;
+      }
+      .creator-title-name {
+        font-size: 0.95rem;
+      }
+      .creator-school-name {
+        font-size: 0.78rem;
+      }
+      .creator-details {
+        font-size: 0.72rem;
+        white-space: nowrap;
+        letter-spacing: -0.2px;
+      }
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+  <header>
+    <div class="header-inner">
+      <div class="logo-area">
+        <div class="logo-icon">⚡</div>
+        <div class="header-title-box">
+          <h1>અલ્ટ્રા-HD સ્માર્ટ ઈમેજ કોમ્પ્રેસર &amp; રિસાઈઝર</h1>
+          <p>10KB જેવી અતિ ઓછી સાઈઝમાં પણ ક્રિસ્પ અક્ષરો અને શાર્પ HD ક્લેરિટી</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <span class="badge badge-online" id="network-badge">🟢 ઓનલાઇન &amp; ઓફલાઇન તૈયાર</span>
+        <span class="badge">💎 4K Unsharp HD Engine</span>
+        <span class="badge">🎯 Exact KB Precision</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+      <div class="dropzone-icon">📁</div>
+      <h3>અહીં ફોટા ડ્રોપ કરો અથવા પસંદ કરવા ક્લિક કરો</h3>
+      <p>સિંગલ અથવા 50+ બલ્ક ફોટા ઝડપથી પ્રોસેસ કરો</p>
+      <input type="file" id="file-input" multiple accept="image/*" style="display:none">
+    </div>
+
+    <!-- 5 Modes Switcher -->
+    <div class="mode-nav-card">
+      <button class="mode-btn active" onclick="switchResizeMode('filesize', this)">📦 ફાઈલ સાઈઝ (KB)</button>
+      <button class="mode-btn" onclick="switchResizeMode('percent', this)">％ પરસેન્ટેજ (%)</button>
+      <button class="mode-btn" onclick="switchResizeMode('dimensions', this)">📐 ડાયમેન્શન (W×H)</button>
+      <button class="mode-btn" onclick="switchResizeMode('longest', this)">📏 સૌથી લાંબી બાજુ</button>
+      <button class="mode-btn" onclick="switchResizeMode('width', this)">↔️ માત્ર પહોળાઈ</button>
+    </div>
+
+    <!-- Settings Card -->
+    <div class="card">
+      <div class="section-title">⚙️ રિસાઈઝ અને ફોર્મેટ કંટ્રોલ પેનલ</div>
+
+      <div class="control-grid">
+        <div class="form-group" id="dynamic-mode-controls"></div>
+
+        <div class="form-group">
+          <label>ડાઉનલોડ ફોર્મેટ પસંદ કરો:</label>
+          <div class="format-grid">
+            <button class="format-btn active" data-fmt="jpg" onclick="setFormat('jpg')">JPG (.jpg)</button>
+            <button class="format-btn" data-fmt="jpeg" onclick="setFormat('jpeg')">JPEG (.jpeg)</button>
+            <button class="format-btn" data-fmt="webp" onclick="setFormat('webp')">WebP (.webp)</button>
+            <button class="format-btn" data-fmt="png" onclick="setFormat('png')">PNG (.png)</button>
+          </div>
+
+          <div class="clarity-badge-card">
+            <div class="clarity-info">
+              <h4>💎 અલ્ટ્રા-HD ટેક્સ્ટ &amp; એજ શાર્પનર (Active)</h4>
+              <p>ઓટોમેટિક માઇક્રો-કોન્ટ્રાસ્ટ અને એજ પ્રોટેક્શન: 10KB કે 20KB સાઈઝમાં પણ દસ્તાવેજના અક્ષરો, સહી અને ફોટો ક્યારેય ઝાંખા નહીં પડે.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="auto-enhance" checked onchange="triggerReprocess()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="batch-bar" id="batch-bar" style="display: none;">
+      <div style="font-size:0.86rem; font-weight:800; color:#0f172a;" id="batch-status">કુલ ફોટા: 0</div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-sm" onclick="document.getElementById('file-input').click()">+ વધુ ઉમેરો</button>
+        <button class="btn-sm btn-sm-danger" onclick="clearAllFiles()">બધા કાઢી નાખો</button>
+      </div>
+    </div>
+
+    <div class="items-grid" id="items-grid"></div>
+  </div>
+
+  <div class="mobile-bar" id="sticky-bar">
+    <div style="font-size:0.84rem; font-weight:800; color:#334155;" id="sticky-info">કોઈ ફોટો પસંદ કરેલ નથી</div>
+    <button class="btn-main" id="btn-download-all" onclick="downloadAllFiles()" disabled>
+      બધા ડાઉનલોડ કરો (ZIP)
+    </button>
+  </div>
+
+  <footer>
+    <div class="smart-creator-card">
+      <div class="photo-glow-ring">
+        <img id="creator-img" alt="શ્રી રાધેશ્યામભાઈ સાધુ" src="https://lh3.googleusercontent.com/d/1Bcd1MR6y2Cso1DPJBHdsXRpku9oii786=w200" onerror="handlePhotoFallback(this)">
+        <div id="creator-init" style="display:none; width:100%; height:100%; border-radius:50%; background:#1e3a8a; color:#f59e0b; font-weight:900; align-items:center; justify-content:center;">RS</div>
+      </div>
+      <div class="creator-content">
+        <span class="creator-tag">નિર્માતા</span>
+        <div class="creator-title-name">શ્રી રાધેશ્યામભાઈ સાધુ</div>
+        <div class="creator-school-name">
+          <span>🏫</span> પ્રાથમિક શાળા ભલગામ
+        </div>
+        <div class="creator-details">
+          તાલુકો - વડગામ, જીલ્લો - બનાસકાંઠા | 📞 મો. 9510102824
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // --- Security & Anti-Copy / Anti-DevTools Protection ---
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      return false;
+    });
+
+    document.addEventListener('keydown', function(e) {
+      // F12 Disable
+      if (e.keyCode === 123) {
+        e.preventDefault();
+        return false;
+      }
+      // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (Inspect Element)
+      if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+        e.preventDefault();
+        return false;
+      }
+      // Ctrl+U (View Source), Ctrl+S (Save Page), Ctrl+C (Copy), Ctrl+A (Select All)
+      if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 67 || e.keyCode === 65)) {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          return false;
+        }
+      }
+    });
+
+    // Anti-Debugging / DevTools Detection Loop
+    setInterval(function() {
+      const before = new Date().getTime();
+      debugger;
+      const after = new Date().getTime();
+      if (after - before > 100) {
+        document.body.innerHTML = '<h2 style="text-align:center;margin-top:20%;color:#ef4444;font-family:sans-serif;">Developer Tools are disabled on this page.</h2>';
+      }
+    }, 1000);
+
+    function handlePhotoFallback(img) {
+      img.style.display = 'none';
+      const init = document.getElementById('creator-init');
+      if (init) init.style.display = 'flex';
+    }
+
+    let fileList = [];
+    let selectedFormat = 'jpg';
+    let currentMode = 'filesize';
+    let debounceTimer = null;
+
+    let targetKB = 10;
+    let targetPercent = 50;
+    let targetLongest = 1200;
+    let targetExactW = 1000;
+    let targetExactH = 800;
+    let targetOnlyW = 1000;
+
+    function switchResizeMode(mode, btn) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderDynamicModeControls();
+      triggerReprocess();
+    }
+
+    function renderDynamicModeControls() {
+      const container = document.getElementById('dynamic-mode-controls');
+
+      if (currentMode === 'filesize') {
+        container.innerHTML = `
+          <label>ટાર્ગેટ ફાઈલ સાઈઝ પસંદ કરો (Preset):</label>
+          <div class="chips-group">
+            <button class="chip-btn ${targetKB==10?'active':''}" onclick="setKBChip(10)">10 KB</button>
+            <button class="chip-btn ${targetKB==15?'active':''}" onclick="setKBChip(15)">15 KB</button>
+            <button class="chip-btn ${targetKB==20?'active':''}" onclick="setKBChip(20)">20 KB</button>
+            <button class="chip-btn ${targetKB==30?'active':''}" onclick="setKBChip(30)">30 KB</button>
+            <button class="chip-btn ${targetKB==50?'active':''}" onclick="setKBChip(50)">50 KB</button>
+            <button class="chip-btn ${targetKB==100?'active':''}" onclick="setKBChip(100)">100 KB</button>
+          </div>
+          <label style="margin-top: 10px;">અથવા કસ્ટમ સાઈઝ દાખલ કરો (KB):</label>
+          <input type="number" id="input-target-kb" class="input-box" value="${targetKB}" min="5" max="15000" oninput="targetKB=parseFloat(this.value)||10; debounceTrigger();">
+        `;
+      } else if (currentMode === 'percent') {
+        container.innerHTML = `
+          <label>ઈમેજ સ્કેલિંગ પરસેન્ટેજ (%) - 10% થી 100%:</label>
+          <div class="chips-group">
+            <button class="chip-btn ${targetPercent==10?'active':''}" onclick="setPercentChip(10)">10%</button>
+            <button class="chip-btn ${targetPercent==20?'active':''}" onclick="setPercentChip(20)">20%</button>
+            <button class="chip-btn ${targetPercent==30?'active':''}" onclick="setPercentChip(30)">30%</button>
+            <button class="chip-btn ${targetPercent==40?'active':''}" onclick="setPercentChip(40)">40%</button>
+            <button class="chip-btn ${targetPercent==50?'active':''}" onclick="setPercentChip(50)">50%</button>
+            <button class="chip-btn ${targetPercent==60?'active':''}" onclick="setPercentChip(60)">60%</button>
+            <button class="chip-btn ${targetPercent==70?'active':''}" onclick="setPercentChip(70)">70%</button>
+            <button class="chip-btn ${targetPercent==80?'active':''}" onclick="setPercentChip(80)">80%</button>
+            <button class="chip-btn ${targetPercent==90?'active':''}" onclick="setPercentChip(90)">90%</button>
+            <button class="chip-btn ${targetPercent==100?'active':''}" onclick="setPercentChip(100)">100%</button>
+          </div>
+          <label style="margin-top: 8px;">અથવા કસ્ટમ ટકાવારી લખો (%):</label>
+          <input type="number" class="input-box" value="${targetPercent}" min="5" max="100" oninput="targetPercent=parseFloat(this.value)||50; debounceTrigger();">
+        `;
+      } else if (currentMode === 'dimensions') {
+        container.innerHTML = `
+          <label>ચોક્કસ પહોળાઈ અને ઊંચાઈ (Pixels):</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div>
+              <span style="font-size:0.74rem; font-weight:700; color:#64748b;">પહોળાઈ (Width px)</span>
+              <input type="number" class="input-box" value="${targetExactW}" oninput="targetExactW=parseFloat(this.value)||800; debounceTrigger();">
+            </div>
+            <div>
+              <span style="font-size:0.74rem; font-weight:700; color:#64748b;">ઊંચાઈ (Height px)</span>
+              <input type="number" class="input-box" value="${targetExactH}" oninput="targetExactH=parseFloat(this.value)||600; debounceTrigger();">
+            </div>
+          </div>
+        `;
+      } else if (currentMode === 'longest') {
+        container.innerHTML = `
+          <label>સૌથી લાંબી બાજુ (Longest Side px):</label>
+          <div class="chips-group">
+            <button class="chip-btn ${targetLongest==800?'active':''}" onclick="setLongestChip(800)">800 px</button>
+            <button class="chip-btn ${targetLongest==1200?'active':''}" onclick="setLongestChip(1200)">1200 px</button>
+            <button class="chip-btn ${targetLongest==1920?'active':''}" onclick="setLongestChip(1920)">1920 px</button>
+          </div>
+          <input type="number" class="input-box" value="${targetLongest}" min="100" max="6000" oninput="targetLongest=parseFloat(this.value)||1200; debounceTrigger();">
+        `;
+      } else if (currentMode === 'width') {
+        container.innerHTML = `
+          <label>ચોક્કસ પહોળાઈ (Width px - ઊંચાઈ ઓટોમેટિક):</label>
+          <input type="number" class="input-box" value="${targetOnlyW}" min="100" max="6000" oninput="targetOnlyW=parseFloat(this.value)||1000; debounceTrigger();">
+        `;
+      }
+    }
+
+    function setKBChip(kb) {
+      targetKB = kb;
+      renderDynamicModeControls();
+      triggerReprocess();
+    }
+
+    function setPercentChip(p) {
+      targetPercent = p;
+      renderDynamicModeControls();
+      triggerReprocess();
+    }
+
+    function setLongestChip(px) {
+      targetLongest = px;
+      renderDynamicModeControls();
+      triggerReprocess();
+    }
+
+    function setFormat(fmt) {
+      selectedFormat = fmt;
+      document.querySelectorAll('.format-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.fmt === fmt);
+      });
+      triggerReprocess();
+    }
+
+    // Drag and Drop
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+
+    ['dragenter', 'dragover'].forEach(n => dropzone.addEventListener(n, e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    }));
+
+    ['dragleave', 'drop'].forEach(n => dropzone.addEventListener(n, e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+    }));
+
+    dropzone.addEventListener('drop', e => {
+      if (e.dataTransfer.files && e.dataTransfer.files.length) {
+        handleIncomingFiles(e.dataTransfer.files);
+      }
+    });
+
+    fileInput.addEventListener('change', e => {
+      if (e.target.files && e.target.files.length) {
+        handleIncomingFiles(e.target.files);
+      }
+    });
+
+    function handleIncomingFiles(files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+
+        const fileObj = {
+          id: 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          originalFile: file,
+          name: file.name,
+          originalSize: file.size,
+          originalUrl: URL.createObjectURL(file),
+          compressedBlob: null,
+          compressedUrl: null,
+          compressedSize: 0
+        };
+        fileList.push(fileObj);
+      }
+      fileInput.value = '';
+      updateUI();
+      processAllQueue();
+    }
+
+    function clearAllFiles() {
+      fileList.forEach(f => {
+        if (f.originalUrl) URL.revokeObjectURL(f.originalUrl);
+        if (f.compressedUrl) URL.revokeObjectURL(f.compressedUrl);
+      });
+      fileList = [];
+      updateUI();
+    }
+
+    function removeFile(id) {
+      const idx = fileList.findIndex(f => f.id === id);
+      if (idx !== -1) {
+        if (fileList[idx].originalUrl) URL.revokeObjectURL(fileList[idx].originalUrl);
+        if (fileList[idx].compressedUrl) URL.revokeObjectURL(fileList[idx].compressedUrl);
+        fileList.splice(idx, 1);
+      }
+      updateUI();
+    }
+
+    function debounceTrigger() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        triggerReprocess();
+      }, 300);
+    }
+
+    function triggerReprocess() {
+      processAllQueue();
+    }
+
+    function multiStepDownsample(img, targetW, targetH) {
+      let curW = img.naturalWidth || img.width;
+      let curH = img.naturalHeight || img.height;
+
+      let scratch = document.createElement('canvas');
+      scratch.width = curW;
+      scratch.height = curH;
+      let sCtx = scratch.getContext('2d', { willReadFrequently: true });
+      sCtx.imageSmoothingEnabled = true;
+      sCtx.imageSmoothingQuality = 'high';
+      sCtx.drawImage(img, 0, 0, curW, curH);
+
+      while (curW * 0.5 > targetW && curH * 0.5 > targetH) {
+        curW = Math.round(curW * 0.5);
+        curH = Math.round(curH * 0.5);
+
+        let step = document.createElement('canvas');
+        step.width = curW;
+        step.height = curH;
+        let stepCtx = step.getContext('2d', { willReadFrequently: true });
+        stepCtx.imageSmoothingEnabled = true;
+        stepCtx.imageSmoothingQuality = 'high';
+        stepCtx.drawImage(scratch, 0, 0, curW, curH);
+
+        scratch = step;
+        sCtx = stepCtx;
+      }
+
+      let finalCanvas = document.createElement('canvas');
+      finalCanvas.width = targetW;
+      finalCanvas.height = targetH;
+      let finalCtx = finalCanvas.getContext('2d', { willReadFrequently: true });
+      finalCtx.imageSmoothingEnabled = true;
+      finalCtx.imageSmoothingQuality = 'high';
+      finalCtx.drawImage(scratch, 0, 0, targetW, targetH);
+
+      return { canvas: finalCanvas, ctx: finalCtx };
+    }
+
+    function applyUltraHDCrispSharpen(ctx, w, h, isLowKB) {
+      try {
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        const copy = new Uint8ClampedArray(d);
+        const strength = isLowKB ? 0.65 : 0.40;
+
+        for (let y = 1; y < h - 1; y++) {
+          const row = y * w;
+          for (let x = 1; x < w - 1; x++) {
+            const idx = (row + x) * 4;
+            for (let c = 0; c < 3; c++) {
+              const cur = copy[idx + c];
+              const neighbors = (
+                copy[((y - 1) * w + x) * 4 + c] +
+                copy[((y + 1) * w + x) * 4 + c] +
+                copy[(row + (x - 1)) * 4 + c] +
+                copy[(row + (x + 1)) * 4 + c]
+              ) * 0.25;
+
+              const delta = cur - neighbors;
+              let sharp = cur + delta * strength;
+
+              if (sharp < 50) sharp *= 0.95;
+              if (sharp > 210) sharp = Math.min(255, sharp * 1.03);
+
+              d[idx + c] = Math.min(255, Math.max(0, sharp));
+            }
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+      } catch (e) {
+        console.warn("Sharpening error:", e);
+      }
+    }
+
+    async function getExactTargetBlob(img, targetBytes, mimeType, autoEnhance) {
+      let curW = img.naturalWidth || img.width;
+      let curH = img.naturalHeight || img.height;
+      const isLowKB = targetBytes <= 25 * 1024;
+
+      let maxDim = 2400;
+      if (targetBytes <= 12 * 1024) maxDim = 720;
+      else if (targetBytes <= 25 * 1024) maxDim = 1000;
+      else if (targetBytes <= 50 * 1024) maxDim = 1400;
+
+      if (curW > maxDim || curH > maxDim) {
+        const r = Math.min(maxDim / curW, maxDim / curH);
+        curW = Math.round(curW * r);
+        curH = Math.round(curH * r);
+      }
+
+      let bestBlob = null;
+      let bestDiff = Infinity;
+
+      for (let dimStep = 0; dimStep < 4; dimStep++) {
+        const { canvas, ctx } = multiStepDownsample(img, curW, curH);
+
+        if (mimeType === 'image/jpeg') {
+          const bgCanvas = document.createElement('canvas');
+          bgCanvas.width = curW;
+          bgCanvas.height = curH;
+          const bgCtx = bgCanvas.getContext('2d');
+          bgCtx.fillStyle = '#FFFFFF';
+          bgCtx.fillRect(0, 0, curW, curH);
+          bgCtx.drawImage(canvas, 0, 0);
+          ctx.drawImage(bgCanvas, 0, 0);
+        }
+
+        if (autoEnhance) {
+          applyUltraHDCrispSharpen(ctx, curW, curH, isLowKB);
+        }
+
+        let lowQ = 0.08;
+        let highQ = 0.96;
+        let stepBestBlob = null;
+
+        for (let qStep = 0; qStep < 9; qStep++) {
+          const midQ = (lowQ + highQ) / 2;
+          const blob = await new Promise(r => canvas.toBlob(r, mimeType, midQ));
+          if (!blob) break;
+
+          const diff = Math.abs(blob.size - targetBytes);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            bestBlob = blob;
+            stepBestBlob = blob;
+          }
+
+          if (diff < targetBytes * 0.03 || (blob.size <= targetBytes && targetBytes - blob.size < targetBytes * 0.04)) {
+            return bestBlob;
+          }
+
+          if (blob.size > targetBytes) {
+            highQ = midQ;
+          } else {
+            lowQ = midQ;
+          }
+        }
+
+        if (stepBestBlob && stepBestBlob.size > targetBytes * 1.05) {
+          const scale = Math.max(0.68, Math.min(0.92, Math.sqrt(targetBytes / stepBestBlob.size) * 0.96));
+          curW = Math.max(160, Math.round(curW * scale));
+          curH = Math.max(160, Math.round(curH * scale));
+        } else if (stepBestBlob && stepBestBlob.size < targetBytes * 0.82 && curW < img.naturalWidth) {
+          const scale = Math.min(1.25, Math.sqrt(targetBytes / stepBestBlob.size));
+          curW = Math.min(img.naturalWidth, Math.round(curW * scale));
+          curH = Math.min(img.naturalHeight, Math.round(curH * scale));
+        } else {
+          break;
+        }
+      }
+
+      return bestBlob;
+    }
+
+    function calculateTargetDimensions(origW, origH) {
+      let finalW = origW;
+      let finalH = origH;
+
+      if (currentMode === 'percent') {
+        const scale = Math.max(5, Math.min(100, targetPercent)) / 100;
+        finalW = Math.round(origW * scale);
+        finalH = Math.round(origH * scale);
+      } else if (currentMode === 'dimensions') {
+        finalW = Math.round(targetExactW);
+        finalH = Math.round(targetExactH);
+      } else if (currentMode === 'longest') {
+        if (origW >= origH) {
+          finalW = Math.round(targetLongest);
+          finalH = Math.round((origH / origW) * targetLongest);
+        } else {
+          finalH = Math.round(targetLongest);
+          finalW = Math.round((origW / origH) * targetLongest);
+        }
+      } else if (currentMode === 'width') {
+        finalW = Math.round(targetOnlyW);
+        finalH = Math.round((origH / origW) * targetOnlyW);
+      }
+
+      return { w: Math.max(1, finalW), h: Math.max(1, finalH) };
+    }
+
+    async function processAllQueue() {
+      const autoEnhance = document.getElementById('auto-enhance').checked;
+
+      for (let item of fileList) {
+        await compressSingleItem(item, autoEnhance);
+        renderItemCard(item);
+      }
+      updateStickyBar();
+    }
+
+    function compressSingleItem(item, autoEnhance) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = async () => {
+          const mimeType = (selectedFormat === 'png') ? 'image/png' : ((selectedFormat === 'webp') ? 'image/webp' : 'image/jpeg');
+
+          if (currentMode === 'filesize' && mimeType !== 'image/png') {
+            const targetBytes = targetKB * 1024;
+            const finalBlob = await getExactTargetBlob(img, targetBytes, mimeType, autoEnhance);
+            finish(finalBlob);
+          } else {
+            let dims = calculateTargetDimensions(img.naturalWidth, img.naturalHeight);
+            let { canvas, ctx } = multiStepDownsample(img, dims.w, dims.h);
+
+            if (mimeType === 'image/jpeg') {
+              const bgCanvas = document.createElement('canvas');
+              bgCanvas.width = dims.w;
+              bgCanvas.height = dims.h;
+              const bgCtx = bgCanvas.getContext('2d');
+              bgCtx.fillStyle = '#FFFFFF';
+              bgCtx.fillRect(0, 0, dims.w, dims.h);
+              bgCtx.drawImage(canvas, 0, 0);
+              ctx.drawImage(bgCanvas, 0, 0);
+            }
+
+            if (autoEnhance) {
+              applyUltraHDCrispSharpen(ctx, dims.w, dims.h, targetPercent <= 25);
+            }
+
+            canvas.toBlob((blob) => {
+              finish(blob);
+            }, mimeType, 0.92);
+          }
+
+          function finish(blob) {
+            if (item.compressedUrl) URL.revokeObjectURL(item.compressedUrl);
+            item.compressedBlob = blob;
+            item.compressedUrl = URL.createObjectURL(blob);
+            item.compressedSize = blob ? blob.size : 0;
+            resolve();
+          }
+        };
+        img.src = item.originalUrl;
+      });
+    }
+
+    function formatSize(bytes) {
+      if (!bytes) return '0 B';
+      if (bytes < 1024) return bytes + ' B';
+      const kb = bytes / 1024;
+      if (kb < 1024) return kb.toFixed(1) + ' KB';
+      return (kb / 1024).toFixed(2) + ' MB';
+    }
+
+    function getFormattedFileName(originalName, fmt) {
+      const dot = originalName.lastIndexOf('.');
+      const base = dot !== -1 ? originalName.substring(0, dot) : originalName;
+      return `${base}_hd_resized.${fmt}`;
+    }
+
+    function downloadSingle(id) {
+      const item = fileList.find(f => f.id === id);
+      if (!item || !item.compressedBlob) return;
+      const a = document.createElement('a');
+      a.href = item.compressedUrl;
+      a.download = getFormattedFileName(item.name, selectedFormat);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    async function downloadAllFiles() {
+      const readyFiles = fileList.filter(f => f.compressedBlob);
+      if (readyFiles.length === 0) return;
+
+      const btn = document.getElementById('btn-download-all');
+      btn.disabled = true;
+      btn.textContent = 'તૈયાર થઈ રહ્યું છે...';
+
+      if (window.JSZip) {
+        try {
+          const zip = new JSZip();
+          readyFiles.forEach(item => {
+            zip.file(getFormattedFileName(item.name, selectedFormat), item.compressedBlob);
+          });
+          const content = await zip.generateAsync({ type: 'blob' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(content);
+          a.download = `HD_Images_${Date.now()}.zip`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (e) {
+          readyFiles.forEach((f, idx) => setTimeout(() => downloadSingle(f.id), idx * 250));
+        }
+      } else {
+        readyFiles.forEach((f, idx) => setTimeout(() => downloadSingle(f.id), idx * 250));
+      }
+
+      btn.disabled = false;
+      updateStickyBar();
+    }
+
+    function updateUI() {
+      const grid = document.getElementById('items-grid');
+      const batchBar = document.getElementById('batch-bar');
+
+      if (fileList.length === 0) {
+        grid.innerHTML = '';
+        batchBar.style.display = 'none';
+      } else {
+        batchBar.style.display = 'flex';
+        document.getElementById('batch-status').textContent = `કુલ પસંદ કરેલા ફોટા: ${fileList.length}`;
+        grid.innerHTML = fileList.map(item => getItemCardHTML(item)).join('');
+      }
+      updateStickyBar();
+    }
+
+    function renderItemCard(item) {
+      const el = document.getElementById(item.id);
+      if (el) {
+        el.outerHTML = getItemCardHTML(item);
+      } else {
+        updateUI();
+      }
+    }
+
+    function getItemCardHTML(item) {
+      const origSize = formatSize(item.originalSize);
+      const compSize = item.compressedSize ? formatSize(item.compressedSize) : 'પ્રોસેસિંગ...';
+      const savings = item.compressedSize ? Math.round(((item.originalSize - item.compressedSize) / item.originalSize) * 100) : 0;
+
+      return `
+        <div class="item-card" id="${item.id}">
+          <div class="item-header">
+            <span class="item-name" title="${item.name}">${item.name}</span>
+            <button class="btn-sm btn-sm-danger" style="padding:2px 7px;" onclick="removeFile('${item.id}')">✕</button>
+          </div>
+          <div class="previews-box">
+            <div class="preview-col">
+              <img src="${item.originalUrl}" alt="Original">
+              <div class="preview-tag">ઓરિજિનલ: ${origSize}</div>
+            </div>
+            <div class="preview-col">
+              <img src="${item.compressedUrl || item.originalUrl}" alt="Final">
+              <div class="preview-tag" style="color:#16a34a; font-weight:800;">નવું: ${compSize}</div>
+            </div>
+          </div>
+          <div class="item-footer">
+            <span class="savings-badge">${savings > 0 ? savings + '% સાઈઝ ઘટી' : 'ઓપ્ટિમાઇઝ્ડ'}</span>
+            <button class="btn-download-single" onclick="downloadSingle('${item.id}')" ${!item.compressedBlob ? 'disabled' : ''}>
+              📥 ડાઉનલોડ (.${selectedFormat})
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateStickyBar() {
+      const info = document.getElementById('sticky-info');
+      const btn = document.getElementById('btn-download-all');
+
+      if (fileList.length === 0) {
+        info.textContent = 'કોઈ ફોટો પસંદ કરેલ નથી';
+        btn.disabled = true;
+      } else {
+        const ready = fileList.filter(f => f.compressedBlob).length;
+        info.textContent = `${ready}/${fileList.length} ફોટા તૈયાર`;
+        btn.disabled = ready === 0;
+        btn.innerHTML = `બધા ડાઉનલોડ કરો (${ready})`;
+      }
+    }
+
+    renderDynamicModeControls();
+  </script>
+</body>
+</html>
